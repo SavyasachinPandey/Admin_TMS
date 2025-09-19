@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Traffic Management System - Dual 4-Lane Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1720;
+            --card: #0b1220;
+            --muted: #9aa4b2;
+            --accent: #2dd4bf;
+            --primary: #60a5fa;
+            --success: #16a34a;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --emergency: #ff1744;
+            --glass: rgba(255,255,255,0.03);
+            --card-radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, system-ui;
+            background: var(--bg);
+            color: #e6eef6;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .wrap {
+            max-width: 1600px;
+            width: 100%;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #051025;
+            font-size: 24px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        p.lead {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--card-radius);
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(2,6,23,0.8);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .emergency-card {
+            border: 1px solid rgba(255, 23, 68, 0.3);
+            background: linear-gradient(135deg, rgba(255, 23, 68, 0.05), var(--card));
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 16px;
+            color: var(--accent);
+        }
+
+        .emergency-title {
+            color: var(--emergency);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin: 8px 0;
+            background: rgba(255,255,255,0.05);
+            color: #e6eef6;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(96,165,250,0.1);
+        }
+
+        button {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #051025;
+        }
+
+        .btn-primary:hover {
+            background: #4f93e7;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #15803d;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: #051025;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-emergency {
+            background: var(--emergency);
+            color: white;
+            animation: emergencyPulse 2s infinite;
+        }
+
+        .btn-emergency:hover {
+            background: #d50000;
+        }
+
+        @keyframes emergencyPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--muted);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.05);
+            color: #e6eef6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Stats Overview */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* Upload Section */
+        .drop {
+            border: 2px dashed rgba(255,255,255,0.1);
+            padding: 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .drop:hover {
+            border-color: var(--primary);
+            background: rgba(96,165,250,0.05);
+        }
+
+        .imgbox {
+            width: 100%;
+            max-width: 480px;
+            height: 300px;
+            background: var(--card);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .imgbox img, .imgbox canvas {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+            border-radius: 6px;
+        }
+
+        /* Dual Traffic Control Layout */
+        .dual-traffic-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        /* Traffic Control Section */
+        .traffic-control {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .status-display {
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .status-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .status-value {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .emergency-status-value {
+            color: var(--emergency);
+        }
+
+        /* 4-Lane Grid */
+        .lanes-container {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .emergency-lanes-container {
+            border: 1px solid rgba(255, 23, 68, 0.3);
+            background: linear-gradient(135deg, rgba(255, 23, 68, 0.05), rgba(255,255,255,0.02));
+        }
+
+        .intersection-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--accent);
+        }
+
+        .emergency-intersection-title {
+            color: var(--emergency);
+            animation: emergencyBlink 3s infinite;
+        }
+
+        @keyframes emergencyBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .lanes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 16px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .lane {
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .lane.active-lane {
+            border-color: var(--accent);
+            background: rgba(45, 212, 191, 0.15);
+            box-shadow: 0 0 20px rgba(45, 212, 191, 0.3);
+        }
+
+        .lane.emergency-active {
+            border-color: var(--emergency);
+            background: rgba(255, 23, 68, 0.15);
+            box-shadow: 0 0 25px rgba(255, 23, 68, 0.4);
+            animation: emergencyActive 1.5s infinite;
+        }
+
+        @keyframes emergencyActive {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .lane-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .lane-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e6eef6;
+            margin: 0;
+        }
+
+        .lane-direction {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .vehicle-info {
+            margin: 8px 0;
+        }
+
+        .vehicle-count {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .emergency-vehicle-count {
+            color: var(--emergency);
+        }
+
+        .priority-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .priority-none { background: rgba(255,255,255,0.1); color: var(--muted); }
+        .priority-low { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .priority-medium { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .priority-high { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .priority-very-high { background: var(--danger); color: white; }
+        .priority-emergency { background: var(--emergency); color: white; animation: emergencyPulse 1s infinite; }
+
+        /* Traffic Lights */
+        .traffic-lights {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .led {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2a2a2a;
+            box-shadow: inset 0 -4px 8px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .led.red.on {
+            background: var(--danger);
+            box-shadow: 0 0 15px var(--danger);
+        }
+
+        .led.yellow.on {
+            background: var(--warning);
+            box-shadow: 0 0 15px var(--warning);
+        }
+
+        .led.green.on {
+            background: var(--success);
+            box-shadow: 0 0 15px var(--success);
+        }
+
+        .timer-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--accent);
+            color: var(--bg);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            animation: pulse 2s infinite;
+        }
+
+        .emergency-indicator {
+            background: var(--emergency);
+            animation: emergencyPulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* Console and Logging */
+        .console {
+            background: #0a0e14;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-line;
+            color: #7dd3fc;
+            margin-top: 16px;
+        }
+
+        .emergency-console {
+            color: #ff6b9d;
+            border: 1px solid rgba(255, 23, 68, 0.3);
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .actions button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        /* Message Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(22, 163, 74, 0.1);
+            border: 1px solid rgba(22, 163, 74, 0.3);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--warning);
+        }
+
+        .alert-emergency {
+            background: rgba(255, 23, 68, 0.1);
+            border: 1px solid rgba(255, 23, 68, 0.3);
+            color: var(--emergency);
+            animation: emergencyPulse 2s infinite;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .dual-traffic-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .traffic-control {
+                grid-template-columns: 1fr;
+            }
+            
+            .wrap {
+                padding: 16px;
+            }
+            
+            .lanes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .actions button {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <div class="logo">TMS</div>
+            <div>
+                <h1>Intelligent Dual 4-Lane Traffic Management</h1>
+                <p class="lead">AI-Powered Dynamic Traffic Signal Control System with Emergency Response</p>
+            </div>
+        </header>
+
+        <!-- Login/Register Section -->
+        <div class="card" id="auth-section">
+            <h2 class="section-title" id="auth-title">Login</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button class="btn-primary" id="authBtn">Login</button>
+            <p style="margin-top:12px;color:var(--muted)">
+                No account? <span id="toggleAuth" style="color:var(--primary);cursor:pointer">Register here</span>
+            </p>
+            <div id="auth-msg" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="hidden">
+            <!-- User Info -->
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <span style="color:var(--muted)">Logged in as:</span>
+                        <strong id="user-role" style="color:var(--primary)"></strong>
+                    </div>
+                    <button class="btn-ghost" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalVehiclesStat">0</div>
+                    <div class="stat-label">Total Vehicles</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeLaneStat">-</div>
+                    <div class="stat-label">Active Lane</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="cycleStatusStat">Ready</div>
+                    <div class="stat-label">System Status</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="emergencyStatusStat">Standby</div>
+                    <div class="stat-label">Emergency Status</div>
+                </div>
+            </div>
+
+            <!-- Emergency SOS Control -->
+            <div class="card emergency-card">
+                <h2 class="section-title emergency-title">🚨 Emergency SOS Control</h2>
+                <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+                    <button class="btn-emergency" id="sosBtn">
+                        🚨 SIMULATE SOS SIGNAL
+                    </button>
+                    <button class="btn-warning" id="clearEmergencyBtn">
+                        🔄 Clear Emergency
+                    </button>
+                    <div style="flex:1; min-width:200px;">
+                        <div class="status-display">
+                            <div class="status-row">
+                                <span class="status-label">Emergency Status:</span>
+                                <span class="status-value" id="emergencySystemStatus">Standby</span>
+                            </div>
+                            <div class="status-row">
+                                <span class="status-label">Last SOS:</span>
+                                <span class="status-value" id="lastSOSTime">Never</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload & Analysis Section -->
+            <div class="card">
+                <h2 class="section-title">🚗 Vehicle Detection & Analysis</h2>
+                
+                <label class="drop" id="dropzone">
+                    <div style="flex:1">
+                        <strong style="font-size:16px;">📸 Drag and drop traffic image here</strong>
+                        <div style="color:var(--muted);font-size:14px;margin-top:8px;">
+                            Supported formats: JPG, PNG, GIF, BMP • Max size: 200MB
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn-ghost" id="browseBtn">Browse Files</button>
+                        <input type="file" id="fileInput" accept="image/*" style="display:none;">
+                    </div>
+                </label>
+
+                <div class="preview hidden" id="preview">
+                    <div style="display:flex; gap:24px; flex-wrap:wrap;">
+                        <div class="imgbox">
+                            <canvas id="imageCanvas"></canvas>
+                        </div>
+                        <div style="flex:1; min-width:300px;">
+                            <div class="status-display">
+                                <h3 style="margin:0 0 12px; color:var(--accent);">Detection Results</h3>
+                                <div id="detectionResults"></div>
+                            </div>
+                            <div class="actions">
+                                <button class="btn-primary" id="analyzeBtn">
+                                    🚀 Start Traffic Control
+                                </button>
+                                <button class="btn-ghost" id="resetBtn">
+                                    🔄 Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dual Traffic Control Section -->
+            <div class="dual-traffic-container hidden" id="dualTrafficControl">
+                <!-- Emergency Traffic Control (Left Side) -->
+                <div class="traffic-control" id="emergencyTrafficControl">
+                    <div class="control-panel">
+                        <div class="card emergency-card">
+                            <h3 class="section-title emergency-title">🚨 Emergency Control Panel</h3>
+                            
+                            <div class="status-display" id="emergencySystemStatusPanel">
+                                <div class="status-row">
+                                    <span class="status-label">Emergency System:</span>
+                                    <span class="status-value emergency-status-value" id="emergencyStatusValue">Standby</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Active Emergency Lane:</span>
+                                    <span class="status-value emergency-status-value" id="emergencyActiveLaneValue">None</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Response Time:</span>
+                                    <span class="status-value emergency-status-value" id="emergencyTimerValue">-</span>
+                                </div>
+                            </div>
+
+                            <div class="actions">
+                                <button class="btn-emergency" id="activateEmergencyBtn">
+                                    🚨 Activate Emergency
+                                </button>
+                                <button class="btn-danger" id="stopEmergencyBtn">
+                                    ⏹ Stop Emergency
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card emergency-card">
+                            <h3 class="section-title emergency-title">📋 Emergency System Log</h3>
+                            <div class="console emergency-console" id="emergencyConsoleArea">Emergency system initialized...\n</div>
+                            <button class="btn-ghost" onclick="clearEmergencyConsole()" style="margin-top:12px; width:100%;">
+                                Clear Emergency Log
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lanes-container emergency-lanes-container">
+                        <div class="intersection-title emergency-intersection-title">🚨 Emergency Vehicle 4-Way Intersection</div>
+                        <div class="lanes-grid" id="emergencyLanesGrid">
+                            <!-- Emergency lanes will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Original Traffic Control (Right Side) -->
+                <div class="traffic-control" id="trafficControl">
+                    <div class="control-panel">
+                        <div class="card">
+                            <h3 class="section-title">🎛 Control Panel</h3>
+                            
+                            <div class="status-display" id="systemStatus">
+                                <div class="status-row">
+                                    <span class="status-label">System Status:</span>
+                                    <span class="status-value" id="systemStatusValue">Ready</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Active Lane:</span>
+                                    <span class="status-value" id="activeLaneValue">None</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Timer:</span>
+                                    <span class="status-value" id="timerValue">-</span>
+                                </div>
+                            </div>
+
+                            <div class="actions">
+                                <button class="btn-success" id="startCycleBtn">
+                                    ▶ Start Cycle
+                                </button>
+                                <button class="btn-danger" id="stopCycleBtn">
+                                    ⏹ Stop Cycle
+                                </button>
+                                <button class="btn-warning" id="emergencyBtn">
+                                    🚨 Emergency
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="section-title">📋 System Log</h3>
+                            <div class="console" id="consoleArea">System initialized...\n</div>
+                            <button class="btn-ghost" onclick="clearConsole()" style="margin-top:12px; width:100%;">
+                                Clear Log
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lanes-container">
+                        <div class="intersection-title">🚦 Regular 4-Way Traffic Intersection</div>
+                        <div class="lanes-grid" id="lanesGrid">
+                            <!-- Regular lanes will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        // Global Variables
+        let currentMode = 'login';
+        let laneStatusInterval = null;
+        let emergencyStatusInterval = null;
+        let currentLaneData = {};
+        let totalCycles = 0;
+        let systemInitialized = false;
+        let emergencyActive = false;
+        let sosSignalActive = false;
+
+        // DOM Elements
+        const authTitle = document.getElementById('auth-title');
+        const authBtn = document.getElementById('authBtn');
+        const toggleAuth = document.getElementById('toggleAuth');
+        const authMsg = document.getElementById('auth-msg');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const dashboard = document.getElementById('dashboard');
+        const userRoleSpan = document.getElementById('user-role');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Upload elements
+        const fileInput = document.getElementById('fileInput');
+        const browseBtn = document.getElementById('browseBtn');
+        const dropzone = document.getElementById('dropzone');
+        const preview = document.getElementById('preview');
+        const imageCanvas = document.getElementById('imageCanvas');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Traffic control elements
+        const dualTrafficControl = document.getElementById('dualTrafficControl');
+        const trafficControl = document.getElementById('trafficControl');
+        const emergencyTrafficControl = document.getElementById('emergencyTrafficControl');
+        const lanesGrid = document.getElementById('lanesGrid');
+        const emergencyLanesGrid = document.getElementById('emergencyLanesGrid');
+        const consoleArea = document.getElementById('consoleArea');
+        const emergencyConsoleArea = document.getElementById('emergencyConsoleArea');
+        const startCycleBtn = document.getElementById('startCycleBtn');
+        const stopCycleBtn = document.getElementById('stopCycleBtn');
+        const emergencyBtn = document.getElementById('emergencyBtn');
+
+        // Emergency elements
+        const sosBtn = document.getElementById('sosBtn');
+        const clearEmergencyBtn = document.getElementById('clearEmergencyBtn');
+        const activateEmergencyBtn = document.getElementById('activateEmergencyBtn');
+        const stopEmergencyBtn = document.getElementById('stopEmergencyBtn');
+
+        // Status elements
+        const systemStatusValue = document.getElementById('systemStatusValue');
+        const activeLaneValue = document.getElementById('activeLaneValue');
+        const timerValue = document.getElementById('timerValue');
+        const detectionResults = document.getElementById('detectionResults');
+
+        // Emergency status elements
+        const emergencyStatusValue = document.getElementById('emergencyStatusValue');
+        const emergencyActiveLaneValue = document.getElementById('emergencyActiveLaneValue');
+        const emergencyTimerValue = document.getElementById('emergencyTimerValue');
+        const emergencySystemStatus = document.getElementById('emergencySystemStatus');
+        const lastSOSTime = document.getElementById('lastSOSTime');
+
+        // Stats elements
+        const totalVehiclesStat = document.getElementById('totalVehiclesStat');
+        const activeLaneStat = document.getElementById('activeLaneStat');
+        const cycleStatusStat = document.getElementById('cycleStatusStat');
+        const emergencyStatusStat = document.getElementById('emergencyStatusStat');
+
+        const backendURL = "http://127.0.0.1:5001";
+        const socket = io();
+
+        // Authentication Functions
+        toggleAuth.addEventListener('click', () => {
+            if (currentMode === 'login') {
+                currentMode = 'register';
+                authTitle.textContent = 'Register';
+                authBtn.textContent = 'Register';
+                toggleAuth.textContent = 'Login here';
+            } else {
+                currentMode = 'login';
+                authTitle.textContent = 'Login';
+                authBtn.textContent = 'Login';
+                toggleAuth.textContent = 'Register here';
+            }
+        });
+
+        authBtn.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!username || !password) {
+                showAuthMessage('Enter username and password', 'error');
+                return;
+            }
+
+            const url = currentMode === 'login' ? `${backendURL}/login` : `${backendURL}/register`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (currentMode === 'login') {
+                        dashboard.classList.remove('hidden');
+                        document.getElementById('auth-section').classList.add('hidden');
+                        userRoleSpan.textContent = data.role;
+                        initializeSystem();
+                    } else {
+                        showAuthMessage('Registration successful! You can login now.', 'success');
+                    }
+                } else {
+                    showAuthMessage(data.message || 'Error', 'error');
+                }
+            })
+            .catch(err => {
+                showAuthMessage('Error connecting to server', 'error');
+                console.error(err);
+            });
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            dashboard.classList.add('hidden');
+            document.getElementById('auth-section').classList.remove('hidden');
+            usernameInput.value = '';
+            passwordInput.value = '';
+            authMsg.textContent = '';
+            stopStatusMonitoring();
+            stopEmergencyMonitoring();
+            resetSystem();
+        });
+
+        function showAuthMessage(message, type) {
+            authMsg.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                authMsg.innerHTML = '';
+            }, 5000);
+        }
+
+        // Emergency SOS Functions
+        sosBtn.addEventListener('click', () => {
+            activateSOSSignal();
+        });
+
+        clearEmergencyBtn.addEventListener('click', () => {
+            clearEmergencyMode();
+        });
+
+        activateEmergencyBtn.addEventListener('click', () => {
+            activateEmergencyGreenSignal();
+        });
+
+        stopEmergencyBtn.addEventListener('click', () => {
+            stopEmergencyMode();
+        });
+
+        function activateSOSSignal() {
+            sosSignalActive = true;
+            const currentTime = new Date().toLocaleTimeString();
+            lastSOSTime.textContent = currentTime;
+            
+            showEmergencyMessage('🚨 SOS SIGNAL RECEIVED - Activating emergency protocols', 'emergency');
+            showMessage('Emergency SOS signal received - Priority override activated', 'warning');
+            
+            // Update emergency status
+            emergencySystemStatus.textContent = 'SOS Received';
+            emergencyStatusStat.textContent = 'SOS Active';
+            
+            // Automatically activate emergency green signal
+            setTimeout(() => {
+                activateEmergencyGreenSignal();
+            }, 2000);
+        }
+
+        function activateEmergencyGreenSignal() {
+            emergencyActive = true;
+            
+            // Stop normal traffic cycles
+            if (laneStatusInterval) {
+                stopCycleBtn.click();
+            }
+            
+            showEmergencyMessage('🚨 Emergency green signal activated - All emergency lanes now have priority', 'emergency');
+            showMessage('Emergency intersection activated - Normal traffic halted', 'warning');
+
+            // Initialize emergency lanes
+            initializeEmergencyLanes();
+            
+            // Set emergency lane 1 (North) to green, others to red
+            updateEmergencyLaneDisplay({
+                lanes: {
+                    1: { name: 'North', vehicles: 1, status: 'green', priority: 5, type: 'emergency' },
+                    2: { name: 'East', vehicles: 0, status: 'red', priority: 0, type: 'emergency' },
+                    3: { name: 'South', vehicles: 0, status: 'red', priority: 0, type: 'emergency' },
+                    4: { name: 'West', vehicles: 0, status: 'red', priority: 0, type: 'emergency' }
+                },
+                current_green_lane: 1,
+                timer_active: true,
+                cycle_active: true
+            });
+
+            // Update emergency system status
+            emergencyStatusValue.textContent = 'EMERGENCY ACTIVE';
+            emergencyActiveLaneValue.textContent = 'Lane 1 (North)';
+            emergencyTimerValue.textContent = 'Priority Mode';
+            emergencyStatusStat.textContent = 'ACTIVE';
+            
+            startEmergencyMonitoring();
+        }
+
+        function stopEmergencyMode() {
+            emergencyActive = false;
+            sosSignalActive = false;
+            
+            showEmergencyMessage('Emergency mode deactivated - Resuming normal traffic operations', 'success');
+            showMessage('Emergency intersection deactivated - Normal operations resumed', 'success');
+
+            // Reset emergency lanes to red
+            updateEmergencyLaneDisplay({
+                lanes: {
+                    1: { name: 'North', vehicles: 0, status: 'red', priority: 0, type: 'emergency' },
+                    2: { name: 'East', vehicles: 0, status: 'red', priority: 0, type: 'emergency' },
+                    3: { name: 'South', vehicles: 0, status: 'red', priority: 0, type: 'emergency' },
+                    4: { name: 'West', vehicles: 0, status: 'red', priority: 0, type: 'emergency' }
+                },
+                current_green_lane: null,
+                timer_active: false,
+                cycle_active: false
+            });
+
+            // Reset emergency status
+            emergencyStatusValue.textContent = 'Standby';
+            emergencyActiveLaneValue.textContent = 'None';
+            emergencyTimerValue.textContent = '-';
+            emergencySystemStatus.textContent = 'Standby';
+            emergencyStatusStat.textContent = 'Standby';
+            
+            stopEmergencyMonitoring();
+        }
+
+        function clearEmergencyMode() {
+            stopEmergencyMode();
+            lastSOSTime.textContent = 'Never';
+            showEmergencyMessage('Emergency system reset complete', 'success');
+        }
+
+        function startEmergencyMonitoring() {
+            if (emergencyStatusInterval) {
+                clearInterval(emergencyStatusInterval);
+            }
+            
+            emergencyStatusInterval = setInterval(() => {
+                if (emergencyActive) {
+                    // Simulate emergency vehicle passage - after 30 seconds, switch to next lane or complete
+                    if (Math.random() > 0.97) { // 3% chance each second to complete emergency
+                        showEmergencyMessage('Emergency vehicle has passed - Clearing emergency mode', 'success');
+                        setTimeout(() => {
+                            stopEmergencyMode();
+                        }, 3000);
+                    }
+                }
+            }, 1000);
+        }
+
+        function stopEmergencyMonitoring() {
+            if (emergencyStatusInterval) {
+                clearInterval(emergencyStatusInterval);
+                emergencyStatusInterval = null;
+            }
+        }
+
+        function initializeEmergencyLanes() {
+            const emergencyDirections = ['North', 'East', 'South', 'West'];
+            let html = '';
+            
+            for (let laneId = 1; laneId <= 4; laneId++) {
+                html += `
+                    <div class="lane" id="emergency-lane-${laneId}">
+                        <div class="lane-header">
+                            <h4 class="lane-title">Emergency Lane ${laneId}</h4>
+                            <div class="lane-direction">${emergencyDirections[laneId - 1]}</div>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-count emergency-vehicle-count">🚑 0</div>
+                            <div class="priority-badge priority-emergency">
+                                Emergency
+                            </div>
+                        </div>
+                        <div class="traffic-lights">
+                            <div class="led red on" id="emergency-r${laneId}"></div>
+                            <div class="led yellow" id="emergency-y${laneId}"></div>
+                            <div class="led green" id="emergency-g${laneId}"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            emergencyLanesGrid.innerHTML = html;
+        }
+
+        function updateEmergencyLaneDisplay(statusData) {
+            const lanes = statusData.lanes || {};
+            const emergencyDirections = ['North', 'East', 'South', 'West'];
+            
+            let html = '';
+            
+            for (let laneId = 1; laneId <= 4; laneId++) {
+                const lane = lanes[laneId] || {
+                    name: emergencyDirections[laneId - 1],
+                    vehicles: 0,
+                    status: 'red',
+                    priority: 0,
+                    type: 'emergency'
+                };
+                
+                const isActive = statusData.current_green_lane === laneId;
+                const activeClass = isActive ? 'emergency-active' : '';
+                
+                html += `
+                    <div class="lane ${activeClass}" id="emergency-lane-${laneId}">
+                        ${isActive && statusData.timer_active ? '<div class="timer-indicator emergency-indicator">🚨 PRIORITY</div>' : ''}
+                        <div class="lane-header">
+                            <h4 class="lane-title">Emergency Lane ${laneId}</h4>
+                            <div class="lane-direction">${lane.name}</div>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-count emergency-vehicle-count">🚑 ${lane.vehicles}</div>
+                            <div class="priority-badge priority-emergency">
+                                Emergency Priority
+                            </div>
+                        </div>
+                        <div class="traffic-lights">
+                            <div class="led red ${lane.status === 'red' ? 'on' : ''}" id="emergency-r${laneId}"></div>
+                            <div class="led yellow ${lane.status === 'yellow' ? 'on' : ''}" id="emergency-y${laneId}"></div>
+                            <div class="led green ${lane.status === 'green' ? 'on' : ''}" id="emergency-g${laneId}"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            emergencyLanesGrid.innerHTML = html;
+        }
+
+        // File Upload Functions
+        browseBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFiles);
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+            dropzone.addEventListener(evt, e => e.preventDefault());
+        });
+
+        dropzone.addEventListener('drop', e => {
+            const file = e.dataTransfer.files[0];
+            if (file) loadImageFile(file);
+        });
+
+        function handleFiles(e) {
+            const file = e.target.files[0];
+            if (file) loadImageFile(file);
+        }
+
+        function loadImageFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showMessage('Please select a valid image file', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img = new Image();
+                img.onload = () => drawToCanvas(img);
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function drawToCanvas(img) {
+            const ratio = Math.min(480/img.width, 300/img.height, 1);
+            imageCanvas.width = Math.floor(img.width * ratio);
+            imageCanvas.height = Math.floor(img.height * ratio);
+            imageCanvas.getContext('2d').drawImage(img, 0, 0, imageCanvas.width, imageCanvas.height);
+            
+            preview.classList.remove('hidden');
+            dualTrafficControl.classList.add('hidden');
+            
+            showMessage('Image loaded successfully. Click "Start Traffic Control" to analyze.', 'success');
+        }
+
+        // Traffic Analysis Functions
+        analyzeBtn.addEventListener('click', analyzeImage);
+
+        function analyzeImage() {
+            if (!imageCanvas.width) {
+                showMessage('Please upload an image first', 'error');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (!file) {
+                showMessage('No file selected', 'error');
+                return;
+            }
+
+            analyzeBtn.innerHTML = '<span class="loading"></span> Analyzing...';
+            analyzeBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch(`${backendURL}/upload`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                analyzeBtn.innerHTML = '🚀 Start Traffic Control';
+                analyzeBtn.disabled = false;
+
+                if (data.status !== 'success') {
+                    showMessage('Detection failed: ' + (data.message || 'Unknown error'), 'error');
+                    return;
+                }
+
+                const totalVehicles = data.total;
+                
+                // Update detection results
+                detectionResults.innerHTML = `
+                    <div class="status-row">
+                        <span class="status-label">Vehicles Detected:</span>
+                        <span class="status-value">${totalVehicles}</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">Detection Method:</span>
+                        <span class="status-value">${data.message || 'YOLO Detection'}</span>
+                    </div>
+                `;
+
+                // Update stats
+                totalVehiclesStat.textContent = totalVehicles;
+                
+                // Start lane analysis
+                startLaneAnalysis(totalVehicles);
+                showMessage(`Detected ${totalVehicles} vehicles. Starting dual traffic control...`, 'success');
+                showEmergencyMessage('Emergency system ready for SOS signals', 'info');
+            })
+            .catch(err => {
+                analyzeBtn.innerHTML = '🚀 Start Traffic Control';
+                analyzeBtn.disabled = false;
+                console.error(err);
+                showMessage('Error processing image', 'error');
+            });
+        }
+
+        // Lane Management Functions
+        function startLaneAnalysis(totalVehicles) {
+            fetch(`${backendURL}/api/lanes/update`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({total_vehicles: totalVehicles})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    currentLaneData = data.data;
+                    updateLaneDisplay(data.data);
+                    initializeEmergencyLanes();
+                    dualTrafficControl.classList.remove('hidden');
+                    
+                    if (data.data.cycle_started) {
+                        startStatusMonitoring();
+                        showMessage('Regular traffic cycle started!', 'success');
+                        totalCycles++;
+                    }
+                } else {
+                    showMessage(data.message || 'Lane analysis failed', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Lane analysis error:', err);
+                showMessage('Lane analysis failed', 'error');
+            });
+        }
+
+        function startStatusMonitoring() {
+            if (laneStatusInterval) {
+                clearInterval(laneStatusInterval);
+            }
+            
+            laneStatusInterval = setInterval(() => {
+                if (!emergencyActive) { // Only monitor regular traffic when no emergency
+                    fetch(`${backendURL}/api/lanes/status`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            updateLaneDisplay(data.data);
+                            
+                            if (!data.data.cycle_active && !data.data.timer_active) {
+                                stopStatusMonitoring();
+                                showMessage('Traffic cycle completed!', 'success');
+                            }
+                        }
+                    })
+                    .catch(err => console.error('Status monitoring error:', err));
+                }
+            }, 1000);
+        }
+
+        function stopStatusMonitoring() {
+            if (laneStatusInterval) {
+                clearInterval(laneStatusInterval);
+                laneStatusInterval = null;
+            }
+        }
+
+        function updateLaneDisplay(statusData) {
+            const lanes = statusData.lanes || {};
+            const laneDirections = ['North', 'East', 'South', 'West'];
+            
+            let html = '';
+            
+            for (let laneId = 1; laneId <= 4; laneId++) {
+                const lane = lanes[laneId] || {
+                    name: laneDirections[laneId - 1],
+                    vehicles: 0,
+                    status: 'red',
+                    priority: 0
+                };
+                
+                const isActive = statusData.current_green_lane === laneId;
+                const activeClass = isActive ? 'active-lane' : '';
+                
+                html += `
+                    <div class="lane ${activeClass}" id="lane-${laneId}">
+                        ${isActive && statusData.timer_active ? '<div class="timer-indicator">🟢 ACTIVE</div>' : ''}
+                        <div class="lane-header">
+                            <h4 class="lane-title">Lane ${laneId}</h4>
+                            <div class="lane-direction">${lane.name}</div>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-count">🚗 ${lane.vehicles}</div>
+                            <div class="priority-badge priority-${getPriorityClass(lane.priority)}">
+                                ${getPriorityText(lane.priority)}
+                            </div>
+                        </div>
+                        <div class="traffic-lights">
+                            <div class="led red ${lane.status === 'red' ? 'on' : ''}" id="r${laneId}"></div>
+                            <div class="led yellow ${lane.status === 'yellow' ? 'on' : ''}" id="y${laneId}"></div>
+                            <div class="led green ${lane.status === 'green' ? 'on' : ''}" id="g${laneId}"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            lanesGrid.innerHTML = html;
+            
+            // Update status display
+            updateStatusDisplay(statusData);
+        }
+
+        function updateStatusDisplay(statusData) {
+            // System status
+            if (statusData.cycle_active) {
+                systemStatusValue.textContent = 'Running';
+                cycleStatusStat.textContent = 'Running';
+            } else if (statusData.timer_active) {
+                systemStatusValue.textContent = 'Active';
+                cycleStatusStat.textContent = 'Active';
+            } else {
+                systemStatusValue.textContent = 'Ready';
+                cycleStatusStat.textContent = 'Ready';
+            }
+
+            // Active lane
+            if (statusData.current_green_lane) {
+                const currentLane = statusData.lanes[statusData.current_green_lane];
+                activeLaneValue.textContent = `Lane ${statusData.current_green_lane} (${currentLane.name})`;
+                activeLaneStat.textContent = statusData.current_green_lane;
+            } else {
+                activeLaneValue.textContent = 'None';
+                activeLaneStat.textContent = '-';
+            }
+
+            // Timer
+            if (statusData.timer_active) {
+                timerValue.textContent = 'Running';
+            } else if (statusData.cycle_active) {
+                timerValue.textContent = 'Switching';
+            } else {
+                timerValue.textContent = '-';
+            }
+        }
+
+        function getPriorityClass(priority) {
+            const classes = ['none', 'low', 'medium', 'high', 'very-high'];
+            return classes[priority] || 'none';
+        }
+
+        function getPriorityText(priority) {
+            const texts = ['None', 'Low', 'Medium', 'High', 'Very High'];
+            return texts[priority] || 'None';
+        }
+
+        // Control Panel Functions
+        startCycleBtn.addEventListener('click', () => {
+            if (emergencyActive) {
+                showMessage('Cannot start regular traffic cycle - Emergency mode active', 'warning');
+                return;
+            }
+            
+            if (!currentLaneData.lanes) {
+                showMessage('Please analyze an image first', 'error');
+                return;
+            }
+
+            const totalVehicles = Object.values(currentLaneData.lanes)
+                .reduce((sum, lane) => sum + lane.vehicles, 0);
+
+            startLaneAnalysis(totalVehicles);
+        });
+
+        stopCycleBtn.addEventListener('click', () => {
+            fetch(`${backendURL}/api/lanes/stop`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    stopStatusMonitoring();
+                    showMessage('Regular traffic cycle stopped!', 'warning');
+                    
+                    setTimeout(() => {
+                        fetch(`${backendURL}/api/lanes/status`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                updateLaneDisplay(data.data);
+                            }
+                        });
+                    }, 500);
+                }
+            })
+            .catch(err => {
+                console.error('Stop error:', err);
+                showMessage('Failed to stop cycle', 'error');
+            });
+        });
+
+        emergencyBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to activate emergency mode? This will stop all regular traffic cycles.')) {
+                stopCycleBtn.click();
+                activateSOSSignal();
+            }
+        });
+
+        // Utility Functions
+        function showMessage(message, type) {
+            const timestamp = new Date().toLocaleTimeString();
+            const typeIcon = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            };
+            
+            consoleArea.textContent += `${timestamp} ${typeIcon[type] || 'ℹ️'} ${message}\n`;
+            consoleArea.scrollTop = consoleArea.scrollHeight;
+        }
+
+        function showEmergencyMessage(message, type) {
+            const timestamp = new Date().toLocaleTimeString();
+            const typeIcon = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️',
+                'emergency': '🚨'
+            };
+            
+            emergencyConsoleArea.textContent += `${timestamp} ${typeIcon[type] || '🚨'} ${message}\n`;
+            emergencyConsoleArea.scrollTop = emergencyConsoleArea.scrollHeight;
+        }
+
+        function clearConsole() {
+            consoleArea.textContent = 'System initialized...\n';
+        }
+
+        function clearEmergencyConsole() {
+            emergencyConsoleArea.textContent = 'Emergency system initialized...\n';
+        }
+
+        function initializeSystem() {
+            if (!systemInitialized) {
+                showMessage('Dual Traffic Management System initialized', 'success');
+                showMessage('Ready to analyze traffic images', 'info');
+                showEmergencyMessage('Emergency SOS system ready', 'info');
+                systemInitialized = true;
+            }
+        }
+
+        function resetSystem() {
+            preview.classList.add('hidden');
+            dualTrafficControl.classList.add('hidden');
+            stopStatusMonitoring();
+            stopEmergencyMonitoring();
+            
+            // Reset stats
+            totalVehiclesStat.textContent = '0';
+            activeLaneStat.textContent = '-';
+            cycleStatusStat.textContent = 'Ready';
+            emergencyStatusStat.textContent = 'Standby';
+            
+            // Clear displays
+            detectionResults.innerHTML = '';
+            lanesGrid.innerHTML = '';
+            emergencyLanesGrid.innerHTML = '';
+            
+            // Reset emergency state
+            emergencyActive = false;
+            sosSignalActive = false;
+            emergencySystemStatus.textContent = 'Standby';
+            lastSOSTime.textContent = 'Never';
+            
+            showMessage('System reset complete', 'info');
+            showEmergencyMessage('Emergency system reset', 'info');
+        }
+
+        // Reset Button
+        resetBtn.addEventListener('click', resetSystem);
+
+        // SocketIO Event Handlers
+        socket.on('connect', function() {
+            console.log('Connected to admin panel');
+        });
+
+        socket.on('disconnect', function() {
+            console.log('Disconnected from admin panel');
+        });
+
+        socket.on('emergency_alert', function(data) {
+            showEmergencyMessage(`🚨 ${data.message}`, 'emergency');
+            if (data.type === 'sos_received') {
+                activateSOSSignal();
+            }
+        });
+
+        socket.on('emergency_cleared', function(data) {
+            showEmergencyMessage(`✅ ${data.message}`, 'success');
+            stopEmergencyMode();
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            showMessage('Welcome to Dual Traffic Management System', 'info');
+            showEmergencyMessage('Emergency SOS system ready', 'info');
+        });
+    </script>
+</body>
+</html>
